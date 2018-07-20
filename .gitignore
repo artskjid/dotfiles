@@ -1,0 +1,4 @@
+emacs/*
+!emacs/init.el
+!emacs/my-elisp
+nvim/pack

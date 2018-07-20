@@ -1,0 +1,40 @@
+[include]
+    path = ~/.gitconfig.local
+
+[alias]
+    df = diff
+    st = status
+    co = checkout
+    ci = commit -v
+    br = branch
+    ll = "!sh -c \"git --no-pager log --oneline HEAD~$1..HEAD\" -"
+    ls = "!sh -c \"git --no-pager log HEAD~$1..HEAD\" -"
+    rb = "!sh -c \"git rebase -i HEAD~$1\" -"
+    fix = "!git add . && git commit -m update"
+    pru = "pull --rebase upstream"
+    pr  = "!sh -c \"git pull --rebase $1 $2\" -"
+
+    # git change-commits GIT_AUTHOR_NAME "old name" "new name"
+    # git change-commits GIT_AUTHOR_EMAIL "old email" "new email"
+    change-commits = "!f() { VAR=$1; OLD=$2; NEW=$3; shift 3; git filter-branch --env-filter \"if [[ \\\"$`echo $VAR`\\\" = '$OLD' ]]; then export $VAR='$NEW'; fi\" $@; }; f "
+
+[filter "lfs"]
+    clean = git-lfs clean %f
+    smudge = git-lfs smudge %f
+    required = true
+
+[push]
+    default = simple
+
+[core]
+    autocrlf = input
+    safecrlf = false
+    editor = vim
+    excludesfile = ~/.gitignore
+
+
+[color]
+    ui = true
+
+[url "git@github.com:"]
+    insteadOf = https://github.com/

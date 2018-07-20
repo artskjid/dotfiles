@@ -1,0 +1,13 @@
+indent_style = "Visual"
+use_small_heuristics = "Max"
+binop_separator = "Back"
+control_brace_style = "AlwaysNextLine"
+brace_style = "AlwaysNextLine"
+fn_single_line = true
+hard_tabs = true
+imports_layout = "HorizontalVertical"
+merge_imports = true
+normalize_comments = true
+reorder_impl_itmes = true
+struct_field_align_threshold = 20
+wrap_comments = true

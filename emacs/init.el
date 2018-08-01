@@ -8,9 +8,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(setq package-archives '(("melpa" . "http://melpa.org/packages/")
+			 ("marmalade" . "http://marmalade-repo.org/packages/")
+			 ("gnu" . "http://elpa.gnu.org/packages/")))
+
+;(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+;(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+;(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -38,7 +42,8 @@
       vc-follow-symlinks t
       x-select-enable-clipboard-manager nil
       coding-system-for-read 'utf-8
-      coding-system-for-write 'utf-8)
+      coding-system-for-write 'utf-8
+      use-package-always-ensure t)
 
 (global-visual-line-mode 1)
 (show-paren-mode 1)
@@ -78,9 +83,10 @@
 ;; use packages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package atom-one-dark-theme :config (load-theme 'atom-one-dark t))
+
 (when (memq window-system '(mac ns x))
   (use-package exec-path-from-shell
-    :ensure t
     :config
     (exec-path-from-shell-initialize)
     (exec-path-from-shell-copy-env "GOPATH")))
@@ -91,11 +97,11 @@
   (setq gofmt-command "goimports"
 	compile-command "go build -v && go test -v && go vet")
 
-  (use-package go-guru :ensure t)
-  (use-package go-rename :ensure t)
-  (use-package go-errcheck :ensure t)
-  (use-package go-eldoc :ensure t :config (add-hook 'go-mode-hook 'go-eldoc-setup))
-  (use-package gotest :ensure t)
+  (use-package go-guru)
+  (use-package go-rename)
+  (use-package go-errcheck)
+  (use-package go-eldoc :config (add-hook 'go-mode-hook 'go-eldoc-setup))
+  (use-package gotest)
 
   (use-package company-go :ensure t
     :config
@@ -104,7 +110,6 @@
 			      (company-mode)))))
 
 (use-package evil
-  :ensure t
   :config
   (evil-mode 1)
   (setq evil-search-wrap t
@@ -122,12 +127,10 @@
   (use-package evil-indent-textobject :ensure t)
 
   (use-package evil-mc
-    :ensure t
     :config
     (global-evil-mc-mode 1)))
 
 (use-package ivy
-  :ensure t
   :diminish ivy-mode
   :config
   (ivy-mode 1)
@@ -140,49 +143,36 @@
 (use-package ox-gfm :ensure t)
 
 (use-package which-key
-  :ensure t
   :diminish which-key-mode
   :config
   (add-hook 'after-init-hook 'which-key-mode))
 
-(use-package company :ensure t :config (add-hook 'after-init-hook 'global-company-mode))
+;(use-package company :ensure t :config (add-hook 'after-init-hook 'global-company-mode))
+(use-package company :ensure t :config (global-company-mode))
 (use-package flycheck :ensure t :init (global-flycheck-mode))
 (use-package magit :ensure t)
 
-(use-package atom-one-dark-theme
-  :ensure t
-  :config
-  (load-theme 'atom-one-dark t))
-
 (use-package lsp-mode
-  :ensure t
   :config
   (use-package lsp-ui
-    :ensure t
+    :hook (lsp-mode . lsp-ui-mode)
     :config
-    (setq lsp-ui-sideline-ignore-duplicate t)
-    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+    (setq lsp-ui-sideline-ignore-duplicate t))
 
   (use-package company-lsp
-    :ensure t
     :config
     (push 'company-lsp company-backends)))
 
-
 (use-package rust-mode
-  :ensure t
   :config
   (setq rust-format-on-save t)
   (use-package lsp-rust
-    :ensure t
+    :hook (rust-mode . lsp-rust-enable)
     :config
-    (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls"))
-    (add-hook 'rust-mode-hook #'lsp-rust-enable))
+    (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls")))
 
   (use-package cargo
-    :ensure t
-    :config
-    (add-hook 'rust-mode-hook 'cargo-minor-mode)))
+    :hook (rust-mode . cargo-minor-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keys

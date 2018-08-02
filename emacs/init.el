@@ -12,9 +12,6 @@
 			 ("marmalade" . "http://marmalade-repo.org/packages/")
 			 ("gnu" . "http://elpa.gnu.org/packages/")))
 
-;(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-;(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-;(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -23,6 +20,27 @@
 
 (eval-when-compile
   (require 'use-package))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Keys
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(with-eval-after-load 'evil-maps
+  (evil-define-key 'normal 'global
+    (kbd "<f1>") (lambda () (interactive) (find-file user-init-file))
+    (kbd "C-o") 'counsel-fzf
+    (kbd "S-C-f") 'counsel-rg
+    "/" 'swiper
+    (kbd "M-<left>") 'previous-buffer
+    (kbd "M-<right>") 'next-buffer)
+
+  (evil-define-key 'normal 'evil-normal-state-map
+    "j" 'evil-next-visual-line
+    "k" 'evil-previous-visual-line)
+
+  (evil-define-key nil 'global
+    (kbd "C->") 'evil-jump-forward
+    (kbd "C-<") 'evil-jump-backward))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; common settings
@@ -91,24 +109,6 @@
     (exec-path-from-shell-initialize)
     (exec-path-from-shell-copy-env "GOPATH")))
 
-(use-package go-mode :ensure t
-  :config
-  (add-hook 'before-save-hook 'gofmt-before-save)
-  (setq gofmt-command "goimports"
-	compile-command "go build -v && go test -v && go vet")
-
-  (use-package go-guru)
-  (use-package go-rename)
-  (use-package go-errcheck)
-  (use-package go-eldoc :config (add-hook 'go-mode-hook 'go-eldoc-setup))
-  (use-package gotest)
-
-  (use-package company-go :ensure t
-    :config
-    (add-hook 'go-mode-hook (lambda ()
-			      (set (make-local-variable 'company-backends) '(company-go))
-			      (company-mode)))))
-
 (use-package evil
   :config
   (evil-mode 1)
@@ -122,13 +122,10 @@
 	  evil-replace-state-cursor '("red" bar)
 	  evil-operator-state-cursor '("red" hollow)))
 
-  (use-package evil-surround :ensure t :config (global-evil-surround-mode))
+  (use-package evil-surround :config (global-evil-surround-mode))
+  (use-package evil-mc :config (global-evil-mc-mode 1))
+  (use-package evil-indent-textobject))
 
-  (use-package evil-indent-textobject :ensure t)
-
-  (use-package evil-mc
-    :config
-    (global-evil-mc-mode 1)))
 
 (use-package ivy
   :diminish ivy-mode
@@ -137,73 +134,72 @@
   (setq ivy-use-virtual-buffers t
 	ivy-count-format "(%d/%d) "))
 
-(use-package counsel :ensure t)
-
-(use-package htmlize :ensure t)
-(use-package ox-gfm :ensure t)
+(use-package magit)
+(use-package counsel)
+(use-package htmlize)
+(use-package ox-gfm)
+(use-package flycheck :init (global-flycheck-mode))
 
 (use-package which-key
   :diminish which-key-mode
   :config
   (add-hook 'after-init-hook 'which-key-mode))
 
-;(use-package company :ensure t :config (add-hook 'after-init-hook 'global-company-mode))
-(use-package company :ensure t :config (global-company-mode))
-(use-package flycheck :ensure t :init (global-flycheck-mode))
-(use-package magit :ensure t)
+(use-package company
+  :bind (:map company-active-map
+	 ("C-n" . company-select-next-or-abort)
+	 ("C-p" . company-select-previous-or-abort))
+  :config
+  (global-company-mode))
+
 
 (use-package lsp-mode
   :config
+
   (use-package lsp-ui
     :hook (lsp-mode . lsp-ui-mode)
-    :config
-    (setq lsp-ui-sideline-ignore-duplicate t))
+    :config (setq lsp-ui-sideline-ignore-duplicate t))
 
-  (use-package company-lsp
-    :config
-    (push 'company-lsp company-backends)))
+  (use-package company-lsp :config (push 'company-lsp company-backends)))
 
 (use-package rust-mode
   :config
+
   (setq rust-format-on-save t)
+
   (use-package lsp-rust
     :hook (rust-mode . lsp-rust-enable)
-    :config
-    (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls")))
+    :config (setq lsp-rust-rls-command '("rustup" "run" "nightly" "rls")))
 
   (use-package cargo
+    :bind (:map rust-mode-map
+	   ("<f5>" . cargo-process-run)
+	   ("<f6>" . cargo-process-test))
     :hook (rust-mode . cargo-minor-mode)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Keys
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package go-mode
+  :hook (before-save . gofmt-before-save)
+  :bind (:map go-mode-map
+	 ("C-]" . godef-jump)
+	 ("M-[" . previous-error)
+	 ("M-]" . next-error)
+	 ("<f5>" . go-run)
+	 ("<f6>" . go-test-current-file))
+  :config
+  (setq gofmt-command "goimports"
+	compile-command "go build -v && go test -v && go vet")
 
-(define-key company-active-map (kbd "C-n") 'company-select-next-or-abort)
-(define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
+  (use-package go-guru)
+  (use-package go-rename)
+  (use-package go-errcheck)
+  (use-package go-eldoc :hook (go-mode . go-eldoc-setup))
+  (use-package gotest)
 
-(evil-define-key 'normal 'global
-  (kbd "<f1>") (lambda () (interactive) (find-file user-init-file))
-  (kbd "C-o") 'counsel-fzf
-  (kbd "S-C-f") 'counsel-rg
-  "/" 'swiper
-  (kbd "M-<left>") 'previous-buffer
-  (kbd "M-<right>") 'next-buffer)
+  (use-package company-go
+    :hook (go-mode . (lambda ()
+		       (set (make-local-variable 'company-backends) '(company-go))
+		       (company-mode)))))
 
-(evil-define-key 'normal 'evil-normal-state-map
-  "j" 'evil-next-visual-line
-  "k" 'evil-previous-visual-line)
 
-(evil-define-key 'normal go-mode-map
-  (kbd "C-]") 'godef-jump
-  (kbd "M-[") 'previous-error
-  (kbd "M-]") 'next-error
-  (kbd "<f5>") 'go-run
-  (kbd "<f6>") 'go-test-current-file)
-
-(evil-define-key nil 'global
-  (kbd "C->") 'evil-jump-forward
-  (kbd "C-<") 'evil-jump-backward)
-
-(evil-define-key 'normal rust-mode-map
-  (kbd "<f5>") 'cargo-process-run
-  (kbd "<f6>") 'cargo-process-test)
+(provide 'init)
+;;; init.el ends here
